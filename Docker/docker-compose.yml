@@ -1,0 +1,41 @@
+services:
+  some-mongo:
+    image: mongo:4.4
+    container_name: some-mongo
+    networks:
+      - lemoncode-challenge
+    volumes:
+      - C:\Users\hugin\Desktop\entregar_docker\lemoncode-challenge\data\init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+      - C:\Users\hugin\Desktop\entregar_docker\lemoncode-challenge\data\db:/data/db
+    ports:
+      - "27017:27017"
+
+  topics-api:
+    build:
+      context: ./dotnet-stack/backend  # Ruta al directorio donde se encuentra el código del backend
+      dockerfile: Dockerfile  # Opcional si se llama Dockerfile por defecto
+    image: topics-api:1.0
+    container_name: topics-api
+    networks:
+      - lemoncode-challenge
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+    ports:
+      - "5000:5000"
+
+  frontend-app:
+    build:
+      context: ./dotnet-stack/frontend  # Ruta al directorio donde se encuentra el código del frontend
+      dockerfile: Dockerfile  # Opcional si se llama Dockerfile por defecto
+    image: front-api:1.0
+    container_name: front-api
+    networks:
+      - lemoncode-challenge
+    environment:
+      - API_URI=http://topics-api:5000/api/topics
+    ports:
+      - "8080:3000"
+
+networks:
+  lemoncode-challenge:
+    driver: bridge
