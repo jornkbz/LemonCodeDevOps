@@ -20,6 +20,23 @@ Me encanta la bash!!
 
 Y `file2.txt` debe permanecer vacío.
 
+
+#### Solución:
+```bash
+# Crear la estructura de directorios
+mkdir -p foo/dummy foo/empty
+
+# Crear file1.txt y añadirle contenido
+echo "Me encanta la bash!!" > foo/dummy/file1.txt
+
+# Crear file2.txt vacío
+touch foo/dummy/file2.txt
+```
+
+
+
+
+
 ### 2. Mediante comandos de bash, vuelca el contenido de file1.txt a file2.txt y mueve file2.txt a la carpeta empty
 
 El resultado de los comandos ejecutados sobre la jerarquía anterior deben dar el siguiente resultado.
@@ -38,12 +55,29 @@ Donde `file1.txt` y `file2.txt` deben contener el siguiente texto:
 Me encanta la bash!!
 ```
 
+
+#### Solución:
+```bash
+# Volcar el contenido de file1.txt a file2.txt
+cat foo/dummy/file1.txt > foo/dummy/file2.txt
+
+# Mover file2.txt a la carpeta empty
+mv foo/dummy/file2.txt foo/empty/
+```
+
+
 ### 3. Crear un script de bash que agrupe los pasos de los ejercicios anteriores y además permita establecer el texto de file1.txt alimentándose como parámetro al invocarlo
 
 Si se le pasa un texto vacío al invocar el script, el texto de los ficheros, el texto por defecto será:
 
 ```bash
 Que me gusta la bash!!!!
+```
+
+#### Solución Ejecutar script de fichero a parte:
+```bash
+chmod +x script.sh    # Dar permisos de ejecución
+./script.sh "Me encanta la bash!!"  # Pasar el texto como parámetro
 ```
 
 ### 4. Crea un script de bash que descargue el contenido de una página web a un fichero y busque en dicho fichero una palabra dada como parámetro al invocar el script
@@ -65,6 +99,14 @@ $ ejercicio4.sh patata
 > Aparece por primera vez en la línea 27
 ```
 
+
+#### Solución Ejecutar script de fichero a parte:
+```bash
+chmod +x ejercicio4.sh
+./ejercicio4.sh patata
+```
+
+
 ### 5. OPCIONAL - Modifica el ejercicio anterior de forma que la URL de la página web se pase por parámetro y también verifique que la llamada al script sea correcta
 
 Si al invocar el script este no recibe dos parámetros (URL y palabra a buscar), se deberá de mostrar el siguiente mensaje:
@@ -82,3 +124,8 @@ $ ejercicio5.sh https://lemoncode.net/ patata
 > Aparece únicamente en la línea 27
 ```
 
+#### Solución Ejecutar script de fichero a parte:
+```bash
+chmod +x ejercicio5.sh
+./ejercicio5.sh https://lemoncode.net/ patata
+```
