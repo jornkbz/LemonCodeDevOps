@@ -10,7 +10,7 @@ docker network create lemoncode-challenge
 Creamos el directorio data:
 ![[Pasted image 20241209203854.png]]
 
-2. Dentro de data creamos db y creamos el fichero para generar la estructura de la base de datos:
+Dentro de data creamos db y creamos el fichero para generar la estructura de la base de datos:
 ![[Pasted image 20241209203922.png]]
 
 El archivo tendría este contenido, es importante conservar la estructura ya que serán los datos que el backend y el frontend necesitarán:
@@ -47,7 +47,7 @@ db.Topics.insertMany([
 
 ```
 
-4. Levantar docker some-mongo:
+Levantar docker some-mongo:
 ```
 docker run --name some-mongo -d --network lemoncode-challenge -v C:\Users\hugin\Desktop\entregar_docker\lemoncode-challenge\data\init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js -v C:\Users\hugin\Desktop\entregar_docker\lemoncode-challenge\data\db:/data/db -p 27017:27017 mongo:4.4
 ```
