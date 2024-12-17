@@ -1,5 +1,5 @@
 
-EJERCICIO 1
+**EJERCICIO 1**
 **0.Red lemoncode-challenge:**
 Para crear la red bastará con usar el siguiente comando por consola:
 ```
@@ -391,7 +391,7 @@ docker rm id_del_contenedor1 id_del_contenedor2 id_del_contenedor3
 
 
 
-EJERCICIO 2
+**EJERCICIO 2**
 **Docker-compose**
 Nos situamos en la carpeta del proyecto y creamos el docker compose:
 ![[Pasted image 20241212201706.png]]
