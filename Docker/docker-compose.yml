@@ -20,6 +20,7 @@ services:
       - lemoncode-challenge
     environment:
       - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_TopicstoreDatabaseSettings__ConnectionString=mongodb://nuevo-mongo:2701
     ports:
       - "5000:5000"
 
