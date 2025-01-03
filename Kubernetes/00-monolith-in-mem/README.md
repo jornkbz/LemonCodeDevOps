@@ -1,40 +1,135 @@
-# Todo App React
+Crear el fichero deployment:
 
-## Run solution locally
+```
+apiVersion: apps/v1
 
-First we need to install dependencies change directory to `todo-app/frontend` and run `npm install`, then change directory to `/todo-app` and run `npm install`. Once that all dependencies are installed, we can run the solution locally by changing directory to `todo-app/frontend` and running `npm run start:dev:server`.
+kind: Deployment
 
-```bash
-# 1. Install frontend dependencies
-cd ./todo-app/frontend
-npm install
+metadata:
 
-# 2. Install backend dependencies
-cd ../
-mpm install
+  name: todo-app
 
-# 3. To start solution run the following command
-npm run start:dev:server
+spec:
+
+  replicas: 1
+
+  selector:
+
+    matchLabels:
+
+      app: todo-app
+
+  template:
+
+    metadata:
+
+      labels:
+
+        app: todo-app
+
+    spec:
+
+      containers:
+
+      - name: todo-app
+
+        image: lemoncodersbc/lc-todo-monolith:v5-2024
+
+        ports:
+
+        - containerPort: 3000
+
+        env:
+
+        - name: NODE_ENV
+
+          value: "production"
+
+        - name: PORT
+
+          value: "3000"
 ```
 
-## Environment Variables
 
-```ini
-NODE_ENV=
-PORT=
+Ejecutar el yaml
+```
+kubectl apply -f todo-app-deployment.yaml
+
 ```
 
-## Running the Application with Docker on Local
+Seguidamente comprobamos que está levantado.
 
-```bash
-$ docker build -t jaimesalas/lc-todo-monolith . 
+```
+kubectl get pods
+
 ```
 
-Start app without database
-
-```bash
-$ docker run -d -p 3000:3000 \
-  -e NODE_ENV=production \
-  -e PORT=3000 \
-  jaimesalas/lc-todo-monolith
+Para más detalle
 ```
+kubectl get pods -o wide
+```
+
+![[Pasted image 20241230123723.png]]
+
+
+
+Ahora crearíamos el servicio.
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-app-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: todo-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+
+```
+
+Seguidamente aplicamos el manifiesto y levantamos el servicio.
+
+```
+kubectl apply -f todo-app-service.yaml
+
+```
+
+Por último podemos acceder al servicio ejecutando.
+```
+minikube service todo-app-service
+
+```
+
+Podemos comprobar el estado del servicio
+```
+kubectl get svc
+```
+
+
+TUNEL MINIKUBE
+
+Ejecutar comando, hay que tener en cuenta que este comando usará la terminal actual por lo que hay que abrir otra terminal para seguir con el proceso:
+```
+minikube tunnel
+
+```
+
+
+Como se menciona anteriormente una vez abierto el tunel en la terminal, abrimos otra terminal y escribimos el siguiente comando para ver la IP- externa de nuestro servicio.
+
+```
+kubectl get svc
+
+```
+
+![[Pasted image 20241230130129.png]]
+
+Una vez identificada la IP externa hay que abrir el navegador e introducir la IP externa y el protocolo http:
+```
+http://127.0.0.1/
+```
+![[Pasted image 20241230130346.png]]
