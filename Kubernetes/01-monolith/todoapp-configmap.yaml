@@ -1,10 +1,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: todo-app-config
+  name: todoapp-config
 data:
+  # Entorno
   NODE_ENV: "production"
+
+  # Puerto
   PORT: "3000"
+
+  # Base de datos
   DB_HOST: "postgres-service"
   DB_USER: "postgres"
   DB_PASSWORD: "postgres"

@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-seed-job
+spec:
+  template:
+    metadata:
+      name: db-seed-job-pod
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed-container
+          image: postgres:10.4
+          # Establecer la contraseña en la variable de entorno:
+          env:
+            - name: PGPASSWORD
+              value: "postgres"
+          # Usar /bin/sh -c e indicar el comando psql en un solo arg (una sola línea)
+          command: ["/bin/sh", "-c"]
+          args:
+            - psql -h postgres-service -U postgres -p 5432 -f /tmp/sql/todos_db.sql
+          volumeMounts:
+            - name: seed-volume
+              mountPath: /tmp/sql
+      volumes:
+        - name: seed-volume
+          configMap:
+            name: db-seed-script
+            items:
+              - key: todos_db.sql
+                path: todos_db.sql
