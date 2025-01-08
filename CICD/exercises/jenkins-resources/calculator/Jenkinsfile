@@ -1,14 +1,30 @@
 pipeline {
     agent any
+
     stages {
-        stage('Compile') {
+        stage('Checkout') {
             steps {
-                sh './gradlew compileJava'
+                // (Si todavía no has quitado tu bloque de checkout declarativo)
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          userRemoteConfigs: [[url: 'https://github.com/jornkbz/LemonCodeDevOps.git']]])
             }
         }
+
+        stage('Compile') {
+            steps {
+                dir('CICD/exercises/jenkins-resources/calculator') {
+                    sh 'chmod +x ./gradlew'
+                    sh './gradlew compileJava'
+                }
+            }
+        }
+
         stage('Test') {
             steps {
-                sh './gradlew test'
+                dir('CICD/exercises/jenkins-resources/calculator') {
+                    sh './gradlew test'
+                }
             }
         }
     }
