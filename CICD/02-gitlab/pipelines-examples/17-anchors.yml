@@ -1,0 +1,35 @@
+.prep_commands: &prep_commands
+  - echo "command 1"
+  - echo "command 2"
+
+.develop_rule: &dev_rule
+   - if: '$CI_COMMIT_BRANCH  ==  "develop"'
+
+.default_image: &default_image
+  image: 
+    alpine:latest
+
+stages:
+    - stage1
+    - stage2
+
+
+job1:
+  <<: *default_image
+  stage: stage1
+  before_script:
+    - *prep_commands
+  script:
+    - echo "Execute script"
+  rules:
+    - *dev_rule
+
+job2:
+  <<: *default_image
+  stage: stage2
+  before_script:
+    - *prep_commands
+  script:
+    - echo "Execute script"
+  rules:
+    - *dev_rule

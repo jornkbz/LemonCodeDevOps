@@ -1,0 +1,37 @@
+stages:
+    - stage1
+    - stage2
+
+build:
+    stage: stage1
+    script:
+       - echo $CI_COMMIT_REF_NAME >> artifact.txt
+    artifacts:
+        when: on_success
+        paths:
+            - "artifact.txt"
+    rules:
+      - if: '$CI_COMMIT_BRANCH  ==  "develop"'
+      - if: '$CI_COMMIT_BRANCH  ==  "master"'
+
+deploy:test:
+    stage: stage2
+    script:
+      - echo "My env is $CI_ENVIRONMENT_NAME"
+      - cat artifact.txt
+      - echo $CI_COMMIT_SHA
+    rules:
+      - if: '$CI_COMMIT_BRANCH  ==  "develop"'
+    environment:
+      name: test
+    
+deploy:prod:
+    stage: stage2
+    script:
+      - echo "My env is $CI_ENVIRONMENT_NAME"
+      - cat artifact.txt
+      - echo $CI_COMMIT_SHA
+    rules:
+      - if: '$CI_COMMIT_BRANCH  ==  "master"'
+    environment:
+      name: prod
