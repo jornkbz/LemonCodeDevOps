@@ -4,10 +4,10 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Se hace el checkout de TODO el repo, pero Jenkinsfile está en proyecto1
+                // Se hace el checkout de TODO el repo, pero Jenkinsfile está en calculator
                 checkout([$class: 'GitSCM', 
                           branches: [[name: '*/main']], 
-                          userRemoteConfigs: [[url: 'https://github.com/tu-usuario/tu-repo.git']]])
+                          userRemoteConfigs: [[url: 'https://github.com/jornkbz/LemonCodeDevOps.git']]])
             }
         }
         
