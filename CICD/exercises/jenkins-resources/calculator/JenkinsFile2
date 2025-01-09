@@ -1,7 +1,9 @@
 pipeline {
-
     agent none
-
+    options {
+        // Evita que Jenkins haga checkout automático al entrar a un stage con 'agent'
+        skipDefaultCheckout()
+    }
     stages {
         stage('Checkout') {
             agent any
@@ -13,22 +15,20 @@ pipeline {
         }
 
         stage('Build & Test') {
-            // Aquí usamos la imagen Docker de Gradle
             agent {
                 docker {
                     image 'gradle:6.6.1-jre14-openj9'
-                    // reuseNode: true -> para compartir el workspace entre contenedor y Jenkins
                     reuseNode true
-                    // args: si necesitas permisos especiales o user root
-                    // args '-u root:root'
                 }
             }
             steps {
-                // Asumimos que el código está en el workspace actual
-                // y que incluiste gradlew en tu repo (opcional: usar gradle global)
-                sh 'chmod +x gradlew'
-                sh './gradlew compileJava'
-                sh './gradlew test'
+                // Asumiendo que tu Jenkinsfile y gradlew viven en:
+                //    CICD/exercises/jenkins-resources/calculator/
+                dir('CICD/exercises/jenkins-resources/calculator') {
+                    sh 'chmod +x gradlew'
+                    sh './gradlew compileJava'
+                    sh './gradlew test'
+                }
             }
         }
     }
