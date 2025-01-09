@@ -1,0 +1,35 @@
+pipeline {
+
+    agent none
+
+    stages {
+        stage('Checkout') {
+            agent any
+            steps {
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          userRemoteConfigs: [[url: 'https://github.com/jornkbz/LemonCodeDevOps.git']]])
+            }
+        }
+
+        stage('Build & Test') {
+            // Aquí usamos la imagen Docker de Gradle
+            agent {
+                docker {
+                    image 'gradle:6.6.1-jre14-openj9'
+                    // reuseNode: true -> para compartir el workspace entre contenedor y Jenkins
+                    reuseNode true
+                    // args: si necesitas permisos especiales o user root
+                    // args '-u root:root'
+                }
+            }
+            steps {
+                // Asumimos que el código está en el workspace actual
+                // y que incluiste gradlew en tu repo (opcional: usar gradle global)
+                sh 'chmod +x gradlew'
+                sh './gradlew compileJava'
+                sh './gradlew test'
+            }
+        }
+    }
+}
