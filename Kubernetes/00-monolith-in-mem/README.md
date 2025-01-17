@@ -69,7 +69,8 @@ Para más detalle
 kubectl get pods -o wide
 ```
 
-https://github.com/jornkbz/LemonCodeDevOps/blob/main/Kubernetes/images/Pasted%20image%2020241230123723.png?raw=true
+![image](https://github.com/user-attachments/assets/14b80e7c-4ba5-4f0c-adec-75768a47ca28)
+
 
 
 
