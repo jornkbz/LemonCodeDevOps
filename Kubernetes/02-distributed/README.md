@@ -200,7 +200,8 @@ Usar nip.io te ahorra el paso de editar el fichero `/etc/hosts`. La idea princip
     
 3. Con eso, cuando hagas peticiones a  http://127-0-0-1.nip.io  se resolverán directamente a la IP 127.0.0.1 gracias a ingress y minikube tunnel
 
-![[Pasted image 20250107231113.png]]
+![image](https://github.com/user-attachments/assets/6a07478f-1135-44a4-abbe-b0fbf24756e2)
+
 ## 4 Ingress :
 
 Habilitamos ingress:
@@ -208,7 +209,8 @@ Habilitamos ingress:
 minikube addons enable ingress
 ```
 
-![[Pasted image 20250107104112.png]]
+![image](https://github.com/user-attachments/assets/c90b902d-405b-4958-8605-c087e7b118d2)
+
 
 Ejecutamos en un terminal a parte:
 ```
@@ -258,7 +260,8 @@ Verificar que NGINX Ingress controller está "Running"
 kubectl get pods -n ingress-nginx
 ```
 
-![[Pasted image 20250107110259.png]]
+![image](https://github.com/user-attachments/assets/6815adea-e7b0-4cbf-ae87-10c9a0c7bd63)
+
 
 
 
