@@ -127,10 +127,12 @@ kubectl get svc
 
 ```
 
-![[Pasted image 20241230130129.png]]
+![image](https://github.com/user-attachments/assets/67179df0-2661-41fe-9d45-dab8fd6c89d6)
+
 
 Una vez identificada la IP externa hay que abrir el navegador e introducir la IP externa y el protocolo http:
 ```
 http://127.0.0.1/
 ```
-![[Pasted image 20241230130346.png]]
+![image](https://github.com/user-attachments/assets/0cfaf727-dcd2-4b59-9451-8c9a773f6b9b)
+
