@@ -727,14 +727,16 @@ Comprobamos job:
 kubectl get jobs
 
 ```
-![[Pasted image 20250103132234.png]]
+![image](https://github.com/user-attachments/assets/a0706aef-d2e6-4a88-ac83-08297dceba98)
+
 
 Y el pod que crea:
 
 ```
 kubectl get pods
 ```
-![[Pasted image 20250103132301.png]]
+![image](https://github.com/user-attachments/assets/ca1e2e69-8b6d-48ab-b4ad-bbdde577a031)
+
 
 Si no se completa puede buscar el error en el log:
 ```
@@ -882,9 +884,10 @@ minikube tunnel
 
 Volvemos al terminal anterior ya que este donde ejecutamos el tunnel se quedará ejecutando el proceso continuamente y comprobamos la IP que se nos ha asignado tras aplicar el fichero todoapp-service.yaml
 
-![[Pasted image 20250103133556.png]]
+![image](https://github.com/user-attachments/assets/6616c5d7-f9d5-4870-95a3-43f193f30652)
+
 
 
 Como se indica, abrimos navegador y vamos a la dirección 127.0.0.1:80
 
-![[Pasted image 20250103133717.png]]
+![image](https://github.com/user-attachments/assets/e723717a-4a83-4421-902b-52a9d2022194)
