@@ -1,121 +1,524 @@
-# Ejercicios
 
-Para superar el módulo debéis entregar como mínimo:
+## 0.Instalación Jenkins
+Vamos a la carpeta:
 
-* La parte obligatoria de los ejercicios de Jenkins o GitLab.
-* La parte obligatoria de los ejercicios de GitHub Actions.
-* Uno de los dos ejercicios opcionales de la parte de GitHub Actions
+```
+cd "C:\Users\hugin\Documents\repo_lemon_code\LemonCodeDevOps\CICD\exercises\jenkins-resources"
+```
 
-## Ejercicios Jenkins
+Generamos la imagen de Jenkins para poder realizar los ejercicios
 
-### 1. CI/CD de una Java + Gradle - OBLIGATORIO
+```
+docker build -t jenkins-gradle -f gradle.Dockerfile .
+```
 
-En el directorio raíz de este [código fuente](./jenkins-resources), crea un `Jenkinsfile` que contenga una pipeline declarativa con los siguientes stages:
+Levantamos el contenedor:
+```
+docker run -p 8080:8080 -p 50000:50000 jenkins-gradle
 
-* **Checkout**. Descarga de código desde un repositorio remoto, preferentemente utiliza GitHub
-* **Compile**. Compilar el código fuente utilizando `gradlew compileJava`
-* **Unit Tests**. Ejecutar los test unitarios utilizando `gradlew test`
+```
 
-Para ejecutar Jenkins en local y tener las dependencias necesarias disponibles podemos contruir una imagen a partir de [este Dockerfile](./jenkins-resources/gradle.Dockerfile)
+En el log de ejecución del contenedor aparece la contraseña de instalación necesaria para la configuración inicial que se solicitará al inicio:
 
-### 2. Modificar la pipeline para que utilice la imagen Docker de Gradle como build runner - OBLIGATORIO
+![[Pasted image 20250108204353.png]]
 
-* Utilizar Docker in Docker a la hora de levantar Jenkins para realizar este ejercicio
-* Como plugins deben estar instalados `Docker` y `Docker Pipeline`
-* Usar la imagen de Docker `gradle:6.6.1-jre14-openj9`
+Usamos el navegador para acceder a la configuración de Jenkins:
 
-## Ejercicios GitLab
+```
+http://localhost:8080
+```
 
-### 1. CI/CD de una aplicación spring - OBLIGATORIO
+Introducimos la contraseña de instalación que aparece en los logs:
 
-* Crea un nuevo proyecto en GitLab y un repositorio en el mismo, para la aplicación `springapp`. El código fuente de la misma lo puedes encontrar en este [enlace](../02-gitlab/springapp).
-* Sube el código al repositorio recientemente creado en GitLab.
-* Crea una pipeline con los siguientes stages:
-  * `maven:build` - En este `stage` el código de la aplicación se compila con [maven](https://maven.apache.org/).
-  * `maven:test` - En este `stage` ejecutamos los tests utilizando [maven](https://maven.apache.org/).
-  * `docker:build` - En este `stage` generamos una nueva imagen de Docker a partir del Dockerfile suministrado en el raíz del proyecto.
-  * `deploy` - En este `stage` utilizamos la imagen anteriormente creada, y la hacemos correr en nuestro local.
+Seguidamente instalamos los plugins recomendados.
 
-* **Pistas**:
-  * Utiliza la versión de maven 3.6.3
-  * El comando para realizar una `build` con maven: `mvn clean package`
-  * El comando para realizar los tests con maven: `mvn verify`
-  * Cuando despleguemos la aplicación en local, podemos comprobar su ejecución en: `http://localhost:8080`
 
-En resumen, la `pipeline` de `CI/CD`, debe hacer la build de la aplicación generando los ficheros jar, hacer los tests de maven y finalmente dockerizar la app (el dockerfile ya se proporciona en el repo) y hacer un deploy en local.
 
-### 2. Crear un usuario nuevo y probar que no puede acceder al proyecto anteriormente creado - OBLIGATORIO
+## 1. Ubicación del Jenkinsfile en el repositorio
 
-* Añadirlo con el role `guest`, comprobar que acciones puede hacer.
-* Cambiar a role `reporter`, comprobar que acciones puede hacer.
-* Cambiar a role `developer`, comprobar que acciones puede hacer.
-* Cambiar a role `maintainer`, comprobar que acciones puede hacer.
+1. Colocar el "Jenkinsfile" en:
+```
+CICD/exercises/jenkins-resources/calculator/Jenkinsfile
+```
+**NOTA:**
+Hay que asegurarse de que, en esa misma carpeta (calculator), esté el proyecto Java con los archivos build.gradle, gradlew, la carpeta gradle, etc. (o al menos que la ruta relativa haga sentido para que, al ejecutar ./gradlew compileJava y ./gradlew test, se encuentren los archivos necesarios).
+**Ojo!, Hay que hacer commit para que esté el JenkinsFile en el repositorio.**
 
-Acciones a probar:
+```
+pipeline {
 
-* Commit
-* Ejecutar pipeline manualmente
-* Push and pull del repo
-* Merge request
-* Acceder a la administración del repo
+    agent any
 
-### 3. Crear un nuevo repositorio, que contenga una pipeline, que clone otro proyecto, springapp anteriormente creado - OPCIONAL
-
-Relizar de las siguientes maneras:
   
-* **Con el método de CI job token**
-  * ¿Qué ocurre si el repo que estoy clonando no estoy cómo miembro?
 
-> Pista: https://docs.gitlab.com/ee/ci/jobs/ci_job_token.html
+    stages {
 
-* **Con el método deploy keys**
-  * Crear deploy key en el repo springapp y poner solo lectura
-  * Crear pipeline que use la deploy key para clonar el repo
+        stage('Checkout') {
 
- > Pista: https://docs.gitlab.com/ee/ci/ssh_keys/
+            steps {
 
-## Ejercicios GitHub Actions
+                // (Si todavía no has quitado tu bloque de checkout declarativo)
 
-### 1. Crea un workflow CI para el proyecto de frontend - OBLIGATORIO
+                checkout([$class: 'GitSCM',
 
-Copia el directorio [.start-code/hangman-front](../03-github-actions/.start-code/hangman-front) en el directorio raíz del mismo repositorio que usaste para las clases de GitHub Actions. Si no lo creaste, crea un repositorio nuevo.
+                          branches: [[name: '*/main']],
 
-Después crea un nuevo workflow que se dispare cuando haya cambios en el proyecto `hangman-front` y exista una nueva pull request (deben darse las dos condiciones a la vez). El workflow ejecutará las siguientes operaciones:
+                          userRemoteConfigs: [[url: 'https://github.com/jornkbz/LemonCodeDevOps.git']]])
 
-* Build del proyecto de front
-* Ejecutar los unit tests
+            }
 
-### 2. Crea un workflow CD para el proyecto de frontend - OBLIGATORIO
+        }
 
-Crea un nuevo workflow que se dispare manualmente y haga lo siguiente:
+  
 
-* Crear una nueva imagen de Docker
-* Publicar dicha imagen en el [container registry de GitHub](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+        stage('Compile') {
 
-### 3. Crea un workflow que ejecute tests e2e - OPCIONAL
+            steps {
 
-Crea un workflow que se lance de la manera que elijas y ejecute los tests e2e que encontrarás en [este enlance](../03-github-actions/.start-code/hangman-e2e/e2e/). Puedes usar [Docker Compose](https://docs.docker.com/compose/gettingstarted/) o [Cypress action](https://github.com/cypress-io/github-action) para ejecutar los tests.
+                dir('CICD/exercises/jenkins-resources/calculator') {
 
-#### Como ejecutar los tests e2e
+                    sh 'chmod +x ./gradlew'
 
-* Tanto el front como la api se deben estar corriendo
+                    sh './gradlew compileJava'
 
-```bash
-docker run -d -p 3001:3000 hangman-api
-docker run -d -p 8080:8080 -e API_URL=http://localhost:3001 hangman-front
+                }
+
+            }
+
+        }
+
+  
+
+        stage('Test') {
+
+            steps {
+
+                dir('CICD/exercises/jenkins-resources/calculator') {
+
+                    sh './gradlew test'
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
 ```
 
-* Los tests se ejecutan desde el directorio `hangman-e2e/e2e` haciendo uso del comando `npm run open`
 
-```bash
-cd hangman-e2e/e2e
-npm run open
+## 2. Crear (o configurar) el job en Jenkins
+
+1. En el "panel de Jenkins", pulsar en "New Item" o "Crear nuevo elemento".
+2. Elegir "Pipeline" como tipo de proyecto y dar un nombre (por ejemplo, "calculator-pipeline").
+
+## 3. Configurar la sección Pipeline
+
+Dentro de la configuración del nuevo job:
+
+1. Ir a la sección "Pipeline".
+2. En "Definition", elegir "Pipeline script from SCM".
+3. En "SCM", seleccionar "Git".
+4. En "Repository URL", pegar la URL del repositorio, por ejemplo:
+```
+https://github.com/jornkbz/LemonCodeDevOps.git
 ```
 
-### 4. Crea una custom JavaScript Action - OPCIONAL
+5. Si tienes una rama específica, cámbiarla en "Branches to build" (en mi caso, "main" ).
+6. En "Script Path" escribir la ruta al archivo Jenkinsfile dentro del repositorio, por ejemplo:
 
-Crea una custom JavaScript Action que se ejecute cada vez que una `issue` tenga la etiqueta `motivate`. La acción deberá pintar por consola un mensaje motivacional. Puedes usar [esta API](https://type.fit) gratuita. Puedes encontrar más información de como crear una custom JS action en [este enlace](https://docs.github.com/es/actions/creating-actions/creating-a-javascript-action).
-
-```bash
-curl https://type.fit/api/quotes
 ```
+CICD/exercises/jenkins-resources/calculator/Jenkinsfile
+
+```
+
+Quedaría más o menos así:
+
+- "Repository URL": `https://github.com/jornkbz/LemonCodeDevOps.git`
+- "Script Path": `CICD/exercises/jenkins-resources/calculator/Jenkinsfile`
+
+7. Guarda los cambios.
+
+## 4. Ejecutar el Pipeline
+
+1. En la página principal del nuevo job, hacer clic en "Build Now" (o "Ejecutar ahora").
+2. Jenkins hará el checkout del repo completo, buscará el "Jenkinsfile" en la ruta que se ha definido y ejecutará los stages (Checkout, Compile, Test, etc.).
+
+Salida de la consola tras ejecutar el pipeline:
+
+
+```
+Started by user admin
+
+Obtained CICD/exercises/jenkins-resources/calculator/Jenkinsfile from git https://github.com/jornkbz/LemonCodeDevOps.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins
+ in /var/jenkins_home/workspace/calculator
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/calculator/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/jornkbz/LemonCodeDevOps.git # timeout=10
+Fetching upstream changes from https://github.com/jornkbz/LemonCodeDevOps.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+ > git fetch --tags --force --progress -- https://github.com/jornkbz/LemonCodeDevOps.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+Checking out Revision 052694032300388c2b782c5fbdb6e9cdfdc8adeb (refs/remotes/origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 052694032300388c2b782c5fbdb6e9cdfdc8adeb # timeout=10
+Commit message: "permisos jenkinsfile"
+ > git rev-list --no-walk d3c895493ac2c9f6c23ec1532147b06c49a2bc12 # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/calculator/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/jornkbz/LemonCodeDevOps.git # timeout=10
+Fetching upstream changes from https://github.com/jornkbz/LemonCodeDevOps.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+ > git fetch --tags --force --progress -- https://github.com/jornkbz/LemonCodeDevOps.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+Checking out Revision 052694032300388c2b782c5fbdb6e9cdfdc8adeb (refs/remotes/origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 052694032300388c2b782c5fbdb6e9cdfdc8adeb # timeout=10
+Commit message: "permisos jenkinsfile"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Compile)
+[Pipeline] dir
+Running in /var/jenkins_home/workspace/calculator/CICD/exercises/jenkins-resources/calculator
+[Pipeline] {
+[Pipeline] sh
++ chmod +x ./gradlew
+[Pipeline] sh
++ ./gradlew compileJava
+Downloading https://services.gradle.org/distributions/gradle-6.6.1-bin.zip
+
+.........10%..........20%..........30%..........40%.........50%..........60%..........70%..........80%..........90%.........100%
+
+
+Welcome to Gradle 6.6.1!
+
+Here are the highlights of this release:
+ - Experimental build configuration caching
+ - Built-in conventions for handling credentials
+ - Java compilation supports --release flag
+
+For more details see https://docs.gradle.org/6.6.1/release-notes.html
+
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+> Task :compileJava
+
+BUILD SUCCESSFUL in 1m 28s
+1 actionable task: 1 executed
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Test)
+[Pipeline] dir
+Running in /var/jenkins_home/workspace/calculator/CICD/exercises/jenkins-resources/calculator
+[Pipeline] {
+[Pipeline] sh
++ ./gradlew test
+
+> Task :compileJava UP-TO-DATE
+> Task :processResources
+> Task :classes
+
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+> Task :test
+
+BUILD SUCCESSFUL in 9s
+4 actionable tasks: 3 executed, 1 up-to-date
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+
+```
+
+
+--------------------------------------------------------------------
+# Ejercicio 2
+---------------------------------------------------------------------
+## 0. Instalación Jeckins dind:
+
+```
+cd "C:\Users\hugin\Documents\repo_lemon_code\LemonCodeDevOps\CICD\01-jenkins\00-instalando-jenkins"
+```
+
+En dicho directorio ejecutamos el comando:
+
+
+```
+docker-compose up 
+```
+
+**Nota**: El compose tira del Dockerfile y del .sh por lo que estos tres archivos deben de situarse en la misma carpeta.
+
+Instalar además los pluggins Docker y Docker Pipeline.
+
+## 1. Ubicación del Jenkinsfile en el repositorio
+
+1. Colocar el `Jenkinsfile2` en:
+```
+CICD/exercises/jenkins-resources/calculator/
+```
+**NOTA:**
+Hay que asegurarse de que , en esa misma carpeta (calculator), esté el proyecto Java con los archivos build.gradle, gradlew, la carpeta gradle, etc. (o al menos que la ruta relativa haga sentido para que, al ejecutar ./gradlew compileJava y ./gradlew test, se encuentren los archivos necesarios).
+
+**Ojo!, Hay que hacer commit para que esté el JenkinsFile en el repositorio.**
+
+```
+pipeline {
+
+    agent none
+
+    options {
+
+        // Evita que Jenkins haga checkout automático al entrar a un stage con 'agent'
+
+        skipDefaultCheckout()
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+
+            agent any
+
+            steps {
+
+                checkout([$class: 'GitSCM',
+
+                          branches: [[name: '*/main']],
+
+                          userRemoteConfigs: [[url: 'https://github.com/jornkbz/LemonCodeDevOps.git']]])
+
+            }
+
+        }
+
+  
+
+        stage('Build & Test') {
+
+            agent {
+
+                docker {
+
+                    image 'gradle:6.6.1-jre14-openj9'
+
+                    reuseNode true
+
+                }
+
+            }
+
+            steps {
+
+                // Asumiendo que tu Jenkinsfile y gradlew viven en:
+
+                //    CICD/exercises/jenkins-resources/calculator/
+
+                dir('CICD/exercises/jenkins-resources/calculator') {
+
+                    sh 'chmod +x gradlew'
+
+                    sh './gradlew compileJava'
+
+                    sh './gradlew test'
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
+```
+
+
+## 2. Crear (o configurar) el job en Jenkins
+
+1. En el **panel de Jenkins**, pulsar en "New Item" o "Crear nuevo elemento".
+2. Elegir "Pipeline" como tipo de proyecto y dar un nombre (por ejemplo, "calculator-pipeline"`).
+
+## 3. Configurar la sección Pipeline
+
+Dentro de la configuración del nuevo job:
+
+1. Ir a la sección "Pipeline".
+2. En "Definition", elegir "Pipeline script from SCM".
+3. En "SCM", seleccionar "Git".
+4. En "Repository URL", pegar la URL del repositorio, por ejemplo:
+```
+https://github.com/jornkbz/LemonCodeDevOps.git
+```
+
+5. Si hay una específica, cámbiarla en "Branches to build" (en mi caso, "main" ).
+6. En "Script Path" , escribe la ruta al archivo Jenkinsfile dentro del repositorio, por ejemplo:
+
+```
+CICD/exercises/jenkins-resources/calculator/Jenkinsfile2
+
+```
+
+Quedaría más o menos así:
+
+- "Repository URL" `https://github.com/jornkbz/LemonCodeDevOps.git`
+- "Script Path": `CICD/exercises/jenkins-resources/calculator/Jenkinsfile2`
+
+7. Guarda los cambios.
+
+## 4. Ejecutar el Pipeline
+
+1. En la página principal del nuevo job, hacer clic en "Build Now" (o "Ejecutar ahora").
+2. Jenkins hará el checkout del repo completo, buscará el "Jenkinsfile" en la ruta que definiste y ejecutará los stages (Checkout, Compile, Test, etc.).
+
+Salida Jenkins:
+
+```
+Started by user admin
+
+Obtained CICD/exercises/jenkins-resources/calculator/JenkinsFile2 from git https://github.com/jornkbz/LemonCodeDevOps.git
+[Pipeline] Start of Pipeline
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] node
+Running on Jenkins
+ in /var/jenkins_home/workspace/calculator2
+[Pipeline] {
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/calculator2/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/jornkbz/LemonCodeDevOps.git # timeout=10
+Fetching upstream changes from https://github.com/jornkbz/LemonCodeDevOps.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+ > git fetch --tags --force --progress -- https://github.com/jornkbz/LemonCodeDevOps.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+Checking out Revision a1d601ab2aa0d8db626f3ed4fb82206594ccc9e1 (refs/remotes/origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f a1d601ab2aa0d8db626f3ed4fb82206594ccc9e1 # timeout=10
+Commit message: "cambios jenk2"
+ > git rev-list --no-walk a1d601ab2aa0d8db626f3ed4fb82206594ccc9e1 # timeout=10
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build & Test)
+[Pipeline] getContext
+[Pipeline] node
+Running on Jenkins
+ in /var/jenkins_home/workspace/calculator2
+[Pipeline] {
+[Pipeline] isUnix
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ docker inspect -f . gradle:6.6.1-jre14-openj9
+.
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] withDockerContainer
+Jenkins seems to be running inside container bd65e6281c3afb52195da1948626b69e7a54dba8ee17612a328cbd94081957f3
+but /var/jenkins_home/workspace/calculator2 could not be found among []
+but /var/jenkins_home/workspace/calculator2@tmp could not be found among []
+$ docker run -t -d -u 1000:1000 -w /var/jenkins_home/workspace/calculator2 -v /var/jenkins_home/workspace/calculator2:/var/jenkins_home/workspace/calculator2:rw,z -v /var/jenkins_home/workspace/calculator2@tmp:/var/jenkins_home/workspace/calculator2@tmp:rw,z -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** gradle:6.6.1-jre14-openj9 cat
+$ docker top af07f426e3eb30dbca8be8f7e29c7a9c4bce3d81f594ce57afb6fdc02950325e -eo pid,comm
+[Pipeline] {
+[Pipeline] dir
+Running in /var/jenkins_home/workspace/calculator2/CICD/exercises/jenkins-resources/calculator
+[Pipeline] {
+[Pipeline] sh
++ chmod +x gradlew
+[Pipeline] sh
++ ./gradlew compileJava
+Downloading https://services.gradle.org/distributions/gradle-6.6.1-bin.zip
+.........10%..........20%..........30%..........40%.........50%..........60%..........70%..........80%..........90%.........100%
+
+Welcome to Gradle 6.6.1!
+
+Here are the highlights of this release:
+ - Experimental build configuration caching
+ - Built-in conventions for handling credentials
+ - Java compilation supports --release flag
+
+For more details see https://docs.gradle.org/6.6.1/release-notes.html
+
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :compileJava UP-TO-DATE
+
+BUILD SUCCESSFUL in 1m 59s
+1 actionable task: 1 up-to-date
+[Pipeline] sh
++ ./gradlew test
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+> Task :test UP-TO-DATE
+
+BUILD SUCCESSFUL in 9s
+4 actionable tasks: 4 up-to-date
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+$ docker stop --time=1 af07f426e3eb30dbca8be8f7e29c7a9c4bce3d81f594ce57afb6fdc02950325e
+$ docker rm -f --volumes af07f426e3eb30dbca8be8f7e29c7a9c4bce3d81f594ce57afb6fdc02950325e
+[Pipeline] // withDockerContainer
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+
+```
+
+
+![[Pasted image 20250118145929.png]]
+
+![[Pasted image 20250118145900.png]]
+
+![[Pasted image 20250118150001.png]]
