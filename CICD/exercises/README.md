@@ -20,7 +20,8 @@ docker run -p 8080:8080 -p 50000:50000 jenkins-gradle
 
 En el log de ejecución del contenedor aparece la contraseña de instalación necesaria para la configuración inicial que se solicitará al inicio:
 
-![[Pasted image 20250108204353.png]]
+![image](https://github.com/user-attachments/assets/5e3cdc2b-b245-4cd2-a32d-fd57817ac018)
+
 
 Usamos el navegador para acceder a la configuración de Jenkins:
 
@@ -517,8 +518,9 @@ Finished: SUCCESS
 ```
 
 
-![[Pasted image 20250118145929.png]]
+![image](https://github.com/user-attachments/assets/98511457-7da5-40a8-8ae5-e6b5c54331bf)
 
-![[Pasted image 20250118145900.png]]
 
-![[Pasted image 20250118150001.png]]
+![image](https://github.com/user-attachments/assets/f67f4510-6da5-4752-9d4e-f0779c953b1c)
+
+![image](https://github.com/user-attachments/assets/0096eeba-cc62-4931-8114-7c2d83de9dcf)
