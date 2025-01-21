@@ -1,30 +1,38 @@
-Usando WSL, hay que copiar el proyecto e ir a la carpeta donde se encuentra el sh gitlab_environment.sh
+## Ejercicio 1
 
-Seleccionar opción 1
-En el siguiente paso seleccionar también opción 1
+1. El primer paso sería levantar Gitlab en WSL, para ello, hay que copiar el proyecto e ir a la carpeta donde se encuentra el sh gitlab_environment.sh
 
-![[Pasted image 20250120210444.png]]
+2. Seleccionar opción 1
+3. En el siguiente paso seleccionar también opción 1
+
+![image](https://github.com/user-attachments/assets/00817149-01a7-4863-85bf-94c23f3227af)
 
 
-Cuando descargue las imágenes el script comenzará a ejecutar comprobaciones de conexión con el contendor:
-![[Pasted image 20250120210632.png]]
 
-Hay que esperar bastante tiempo(varios minutos) a que consiga conectarse, es normal que haga muchos intentos sin éxito, solo hay que esperar a que muestre esto:
+4. Cuando descargue las imágenes el script comenzará a ejecutar comprobaciones de conexión con el contendor:
+![image](https://github.com/user-attachments/assets/1e5e0f0c-f76f-49f7-88c1-7ab69ea3a517)
+
+
+5. Hay que esperar bastante tiempo(varios minutos) a que consiga conectarse, es normal que haga muchos intentos sin éxito, solo hay que esperar a que muestre esto:
 Indicando que la conexión ha sido exitosa.
-![[Pasted image 20250120210848.png]]
-Se crea grupo y proyecto en blanco:
+![image](https://github.com/user-attachments/assets/d7c65125-6425-4ff0-b582-2f0d907a9557)
 
-![[Pasted image 20250120211936.png]]
+6. Se crea grupo y proyecto en blanco:
 
-Nos descargamos el proyecto vacio y añadimos a el el contenido de la carpeta springapp proporcionada para el ejercicio.
+![image](https://github.com/user-attachments/assets/01bc66ee-2841-4864-8423-7c55b314a413)
 
-Seguidamente subimos el proyecto con comandos git, antes debemos configurar correo y nombre de git por consola si es la primera vez que lo usamos :
-![[Pasted image 20250120212810.png]]
 
-Hacemos comiit y push para subir los ficheros
-![[Pasted image 20250120212857.png]]
+7. Nos descargamos el proyecto vacio y añadimos a el el contenido de la carpeta springapp proporcionada para el ejercicio.
 
-Ahora quedaría crear  pipeline para ello creamos el yml o bine mediante interfaz o creándolo en local y subiéndolo al repo.
+8. Seguidamente subimos el proyecto con comandos git, antes debemos configurar correo y nombre de git por consola si es la primera vez que lo usamos :
+![image](https://github.com/user-attachments/assets/0340f4b5-41d3-44a8-b8ab-cf986cefb8db)
+
+
+9. Hacemos comiit y push para subir los ficheros
+![image](https://github.com/user-attachments/assets/313291c9-9ec4-4b25-b00a-13a410e8ee95)
+
+
+10. Ahora quedaría crear  pipeline para ello creamos el yml o bine mediante interfaz o creándolo en local y subiéndolo al repo.
 ```
 # Este archivo define la configuración de la pipeline de GitLab CI/CD para una aplicación Spring.
 # Se han establecido cuatro etapas principales: 
@@ -119,25 +127,34 @@ deploy:
 
 ```
 
-Resultado:
-![[Pasted image 20250120224822.png]]
-
-
-![[Pasted image 20250120224841.png]]
-
-![[Pasted image 20250120224908.png]]
+11. Resultado:
+![image](https://github.com/user-attachments/assets/c54e4199-63ab-401b-859c-1c92e0d4cbfd)
 
 
 
-![[Pasted image 20250120224941.png]]![[Pasted image 20250120225044.png]]
-
-![[Pasted image 20250120225100.png]]
-![[Pasted image 20250120225118.png]]
+![image](https://github.com/user-attachments/assets/87fa5813-7fc4-48fb-aaef-ba949f1547e3)
 
 
-![[Pasted image 20250120225648.png]]
+![image](https://github.com/user-attachments/assets/c8d1e53b-6ef6-4b3a-9a85-dfdf2581ecc3)
 
-![[Pasted image 20250120225714.png]]
+![image](https://github.com/user-attachments/assets/5954ef0b-55c8-432c-8f98-fe26b672cdfc)
+
+
+
+![image](https://github.com/user-attachments/assets/186d0b86-2a62-45bf-8753-1a1270f6da90)
+
+
+![image](https://github.com/user-attachments/assets/694a9e58-da81-4093-921b-f2638328af8f)
+
+![image](https://github.com/user-attachments/assets/5ed775c3-a2a0-4856-817e-1f0bcff9f4c0)
+
+
+
+![image](https://github.com/user-attachments/assets/f26b07ca-15bb-4042-8dc5-185f28e33ece)
+
+
+![image](https://github.com/user-attachments/assets/59a99c03-e37d-468f-8f1d-18ac9af3cead)
+
 
 
 ```
@@ -170,21 +187,24 @@ Resultado:
 
 
 
-Se crean los usuarios desde el panel de administrador :
-![[Pasted image 20250121190248.png]]
+1. Se crean los usuarios desde el panel de administrador :
+![image](https://github.com/user-attachments/assets/550a9161-acf5-4a66-bc09-5b0df5d35344)
 
 
-Se selecciona el proyecto:
 
-![[Pasted image 20250121190100.png]]
+2. Se selecciona el proyecto:
 
-
-Se invitan al proyecto y se le asignan el rol
+![image](https://github.com/user-attachments/assets/6cec6545-38a7-4b8b-becb-a1f7803892e1)
 
 
-![[Pasted image 20250121190010.png]]
 
-Pruebas:
+3. Se invitan al proyecto y se le asignan el rol
+
+
+![image](https://github.com/user-attachments/assets/31f26421-f87d-4eaa-8d92-aad0acb9dabf)
+
+
+4. Pruebas:
 
 | Acción                                   | Guest<br>               | Reporter                                             | Developer                                 | Maintainer                                          |
 | ---------------------------------------- | ----------------------- | ---------------------------------------------------- | ----------------------------------------- | --------------------------------------------------- |
