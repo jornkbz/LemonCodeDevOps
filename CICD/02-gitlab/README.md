@@ -1,236 +1,201 @@
-# GitLab BOOTCAMP
+Usando WSL, hay que copiar el proyecto e ir a la carpeta donde se encuentra el sh gitlab_environment.sh
 
-![](https://about.gitlab.com/images/press/logo/jpg/gitlab-logo-gray-rgb.jpg)
+Seleccionar opción 1
+En el siguiente paso seleccionar también opción 1
 
-<p  align="center">
+![[Pasted image 20250120210444.png]]
 
-<img  src="https://avatars.githubusercontent.com/u/7702396?s=200&v=4">
 
-</p>
+Cuando descargue las imágenes el script comenzará a ejecutar comprobaciones de conexión con el contendor:
+![[Pasted image 20250120210632.png]]
 
-  
+Hay que esperar bastante tiempo(varios minutos) a que consiga conectarse, es normal que haga muchos intentos sin éxito, solo hay que esperar a que muestre esto:
+Indicando que la conexión ha sido exitosa.
+![[Pasted image 20250120210848.png]]
+Se crea grupo y proyecto en blanco:
 
-> **El entorno está preparado para funcionar tanto en docker(Recomendado) en local o con una maquina virtual vagrant**
+![[Pasted image 20250120211936.png]]
 
-> **Importante** - Esta configuración está destinada únicamente para entornos de desarrollo. No debe ser utilizada como referencia en un entorno productivo.
+Nos descargamos el proyecto vacio y añadimos a el el contenido de la carpeta springapp proporcionada para el ejercicio.
 
-## Versiones de software
-###  Entorno Docker (Recomendado)
-- Docker Engine: >= 20
+Seguidamente subimos el proyecto con comandos git, antes debemos configurar correo y nombre de git por consola si es la primera vez que lo usamos :
+![[Pasted image 20250120212810.png]]
 
-### Entorno Vagrant
-- Vagrant: >= 2.2.x
-- VirtualBox >= 6.x
+Hacemos comiit y push para subir los ficheros
+![[Pasted image 20250120212857.png]]
 
-## Creación del entorno
+Ahora quedaría crear  pipeline para ello creamos el yml o bine mediante interfaz o creándolo en local y subiéndolo al repo.
+```
+# Este archivo define la configuración de la pipeline de GitLab CI/CD para una aplicación Spring.
+# Se han establecido cuatro etapas principales: 
+# 1) maven_build   2) maven_test   3) docker   4) deploy
 
-1. Permitimos registry inseguro a docker
+stages:
+  - maven_build
+  - maven_test
+  - docker
+  - deploy
 
-* En Linux En el fichero /etc/docker/daemon.json
+# La sección "default" establece un caché para las dependencias de Maven, 
+# de modo que se puedan reutilizar en lugar de descargarlas en cada job.
+default:
+  cache:
+    key: default-m2-repository
+    paths:
+      - .m2/repository
+
+# Se definen variables que se utilizarán en los jobs de Maven.
+# MAVEN_OPTS establece la ubicación local del repositorio y opciones de logging.
+# MAVEN_CLI_OPTS contiene parámetros genéricos para los comandos de Maven.
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -U -s settings.xml"
+
+# Job: maven-build
+# Compila la aplicación con Maven, omitiendo los tests (skipTests) para acelerar la build.
+# Se generan archivos .jar en la carpeta "target/", que se guardan como artifacts.
+maven-build:
+  stage: maven_build
+  image: maven:3.9.5-eclipse-temurin-21
+  script:
+    - mvn $MAVEN_CLI_OPTS clean package -DskipTests
+  artifacts:
+    when: on_success
+    paths:
+      - "target/*.jar"
+
+# Job: maven-test
+# Ejecuta los tests de la aplicación con Maven (mvn verify).
+# Genera reportes JUnit para que GitLab pueda mostrar un resumen de las pruebas.
+maven-test:
+  stage: maven_test
+  image: maven:3.9.5-eclipse-temurin-21
+  script:
+    - mvn $MAVEN_CLI_OPTS verify
+  artifacts:
+    when: on_success
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+
+# Job: docker-build
+# Construye la imagen Docker de la aplicación a partir del Dockerfile, 
+# usando el artefacto .jar generado en el job maven-build.
+# A continuación, sube la imagen al registro de GitLab.
+docker-build:
+  stage: docker
+  dependencies:
+    - maven-build
+  before_script:
+    # Se inicia sesión en el registro de GitLab para poder hacer push de la imagen.
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY/$CI_PROJECT_PATH
+  script:
+    # Se imprimen algunas variables por motivos de depuración (aunque no se recomienda mostrar credenciales en logs).
+    - echo $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD
+    # Construye la imagen y la etiqueta con el SHA del commit.
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_SHA .
+    # Envía la imagen al registro asociado al proyecto.
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_SHA
+  cache: []
+
+# Job: deploy
+# Despliega la aplicación en local, creando un contenedor con la imagen generada.
+# Se elimina cualquier contenedor anterior que coincida con el nombre "springapp".
+deploy:
+  stage: deploy
+  image: docker:latest
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
+    # Se verifica si existe un contenedor llamado "springapp"; en caso afirmativo, se elimina.
+    - if [ "$(docker ps -a --filter "name=springapp" --format '{{.Names}}')" = "springapp" ]; then
+        docker rm -f springapp;
+      else
+        echo "No existe contenedor anterior";
+      fi
+  script:
+    # Se levanta un contenedor nuevo en segundo plano, exponiendo el puerto 8080 para acceder a la aplicación.
+    - docker run --name "springapp" -d -p 8080:8080 "$CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_SHA"
+  cache: []
 
 ```
-{"insecure-registries" : ["gitlab.local:5001", "gitlab.local:8888"]}
-```
 
-* En windows lo hacemos via Docker Desktop
+Resultado:
+![[Pasted image 20250120224822.png]]
 
-2. Acceso al directorio de gitlab damos permisos de ejecucion al script de preparacion del entorno de gitlab.
-Con el script `gitlab_environment.sh`podemos ejecutar, parar y destruir los entornos de gitlab, ya sea con Docker o Vagrant.
-```bash
-user@localhost:~/bootcamp-devops-lemoncode$  cd  03-cd/02-gitlab
-user@localhost:~/bootcamp-devops-lemoncode/03-cd/02-gitlab$ sudo  chmod  +x gitlab_environment.sh
-```
-2a. Preparando el entorno con docker (Linux y Windows WSL).
 
-```
-user@localhost:~/bootcamp-devops-lemoncode/03-cd/02-gitlab$ sudo ./gitlab_environment.sh  
-1 - Docker environment  
-2 - Vagrant environment  
-### Choose the Gitlab environment ###  
-1  
-1 - Build and run gitlab  
-2 - Stop gitlab  
-3 - Start gitlab  
-4 - Destroy gitlab  
-### Choose your option and press enter ###  
-1  
-### Preparing gitlab environment ###  
-  
-[+] Running 10/10  
-✔ Network bootcamp_network Created  0.0s  
-✔ Network gitlab_default Created  0.1s  
-✔ Volume "gitlab_gitlab-logs" Created  0.0s  
-✔ Volume "gitlab_gitlab-data" Created  0.0s  
-✔ Volume "gitlab_gitlab-runner-config" Created  0.0s  
-✔ Volume "gitlab_portainer_data" Created  0.0s  
-✔ Volume "gitlab_gitlab-config" Created  0.0s  
-✔ Container gitlab Started  0.1s  
-✔ Container portainer Started  0.1s  
-✔ Container gitlab-runner Started
-...
+![[Pasted image 20250120224841.png]]
+
+![[Pasted image 20250120224908.png]]
+
+
+
+![[Pasted image 20250120224941.png]]![[Pasted image 20250120225044.png]]
+
+![[Pasted image 20250120225100.png]]
+![[Pasted image 20250120225118.png]]
+
+
+![[Pasted image 20250120225648.png]]
+
+![[Pasted image 20250120225714.png]]
+
 
 ```
-
-2b. Preparando el entorno con Vagrant y Virtualbox
-
-```bash
-
-user@localhost:~/bootcamp-devops-lemoncode/03-cd/02-gitlab$ sudo ./gitlab_environment.sh  
-1 - Docker environment  
-2 - Vagrant environment  
-### Choose the Gitlab environment ###  
-2
-1 - Build and run gitlab vagrant machine  
-2 - Suspend gitlab vagrant machine  
-3 - Resume gitlab vagrant machine  
-4 - Destroy gitlab vagrant machine  
-1
-### Preparing gitlab vagrant machine ###  
-  
-Bringing machine 'bootcampVM' up with 'virtualbox' provider...  
-==> bootcampVM: Box 'ubuntu/jammy64' could not be found. Attempting to find and install...  
-bootcampVM: Box Provider: virtualbox  
-bootcampVM: Box Version: 20231027.0.0  
-==> bootcampVM: Loading metadata for box 'ubuntu/jammy64'  
-bootcampVM: URL: https://vagrantcloud.com/ubuntu/jammy64  
-==> bootcampVM: Adding box 'ubuntu/jammy64' (v20231027.0.0) for provider: virtualbox
-...
+2025-01-20 22:44:39 
+2025-01-20 22:44:39   .   ____          _            __ _ _
+2025-01-20 22:44:39  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+2025-01-20 22:44:39 ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+2025-01-20 22:44:39  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+2025-01-20 22:44:39   '  |____| .__|_| |_|_| |_\__, | / / / /
+2025-01-20 22:44:39  =========|_|==============|___/=/_/_/_/
+2025-01-20 22:44:39  :: Spring Boot ::                (v3.1.0)
+2025-01-20 22:44:39 
+2025-01-20 22:44:39 2025-01-20T21:44:39.543Z  INFO 1 --- [           main] com.example.HelloWorldApplication        : Starting HelloWorldApplication v1.0.0-SNAPSHOT using Java 21.0.5 with PID 1 (/app/app.jar started by root in /app)
+2025-01-20 22:44:39 2025-01-20T21:44:39.546Z  INFO 1 --- [           main] com.example.HelloWorldApplication        : No active profile set, falling back to 1 default profile: "default"
+2025-01-20 22:44:40 2025-01-20T21:44:40.351Z  INFO 1 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-01-20 22:44:40 2025-01-20T21:44:40.364Z  INFO 1 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-01-20 22:44:40 2025-01-20T21:44:40.364Z  INFO 1 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.8]
+2025-01-20 22:44:40 2025-01-20T21:44:40.454Z  INFO 1 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-01-20 22:44:40 2025-01-20T21:44:40.455Z  INFO 1 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 848 ms
+2025-01-20 22:44:40 2025-01-20T21:44:40.747Z  INFO 1 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-01-20 22:44:40 2025-01-20T21:44:40.763Z  INFO 1 --- [           main] com.example.HelloWorldApplication        : Started HelloWorldApplication in 1.61 seconds (process running for 2.008)
+2025-01-20 22:51:50 2025-01-20T21:51:50.149Z  INFO 1 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-01-20 22:51:50 2025-01-20T21:51:50.150Z  INFO 1 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-01-20 22:51:50 2025-01-20T21:51:50.151Z  INFO 1 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
 ```
 
-3. Añadimos entrada al fichero hosts la entrada -> <Direccion_ip_local> gitlab.local
->**Nota Importante**: Si usamos vagrant la ip sera la de la maquina virtual  -> 192.168.56.150
 
-* Linux en el fichero /etc/hosts
 
-* Windows en el fichero c:\windows\system32\drivers\etc\hosts
+## Ejercicio 2
 
-## ¿Qué vamos a aprender?
 
-1. Conceptos Gitlab
-    
-    - ¿Qué es Gitlab?
 
-      GitLab es una plataforma completa de DevOps que cubre todo el ciclo de vida del desarrollo de software, desde la planificación hasta la implementación. Ofrece un lugar centralizado donde los equipos pueden gestionar el código fuente, realizar pruebas, automatizar el despliegue y mucho más.
-      - [Gitlab Architecture](https://docs.gitlab.com/ee/development/architecture.html)
+Se crean los usuarios desde el panel de administrador :
+![[Pasted image 20250121190248.png]]
 
-    - ¿Qué es un runner?
 
-      Un GitLab Runner es una aplicación que ejecuta los trabajos de un pipeline dentro de un proyecto de GitLab. En otras palabras, los runners son los encargados de ejecutar el código o las tareas definidas en el pipeline de un proyecto. GitLab Runner puede ejecutarse en diversos entornos, como servidores físicos, virtuales, en contenedores Docker, entre otros.
-       - [Gitlab Runner Executors](https://docs.gitlab.com/runner/executors/)
-       - [Gitlab Runner Execution Flow](https://docs.gitlab.com/runner/#runner-execution-flow)
+Se selecciona el proyecto:
 
-    - ¿Qué es un pipeline?
+![[Pasted image 20250121190100.png]]
 
-      Un pipeline en GitLab (y en el contexto de la integración continua y entrega continua, CI/CD) es un conjunto de tareas o trabajos automatizados que se ejecutan de manera secuencial o paralela para llevar a cabo una serie de procesos durante el desarrollo de un software.
-      
-2. Gestión de Usuarios
-    
-    - Alta de usuarios
-    - Impersonate
-    - SSH Keys
-    - Access Token
 
-3. Gestión de proyectos(repositorios) y grupos:
+Se invitan al proyecto y se le asignan el rol
 
-    - Miembros - [Roles and permissions](https://docs.gitlab.com/ee/user/permissions.html)
-    - [Project Access Tokens](https://docs.gitlab.com/ee/user/project/settings/project_access_tokens.html)
-    - [Group Access Tokens](https://docs.gitlab.com/ee/user/group/settings/group_access_tokens.html)
-    - [Deploy Tokens](https://docs.gitlab.com/ee/user/project/deploy_tokens/)
-    - [Deploy Keys](https://docs.gitlab.com/ee/user/project/deploy_keys/)
-    - [Protected Branches](https://docs.gitlab.com/ee/user/project/repository/branches/protected.html)
-    - [Protected Tags](https://docs.gitlab.com/ee/user/project/protected_tags.html)
 
-4. Entendiendo los pipelines
+![[Pasted image 20250121190010.png]]
 
-    - Conceptos de Pipeline
-        - ¿Como se define?
+Pruebas:
 
-          Todas estas tareas estan definidas en un archivo de configuración llamado .gitlab-ci.yml.
-          - [Referencia configuración de pipeline](https://docs.gitlab.com/ee/ci/yaml/)
-        
-        - ¿Cuando se ejecuta? https://docs.gitlab.com/ee/ci/pipelines/
-       
-          - Branch pipelines
-          - Merge request pipeline
-          - Tag pipeline
-          - Scheduled pipeline
-          - Parent-child pipeline
-          - Multi-project pipeline
-        
-        - ¿Qué es un job?
+| Acción                                   | Guest<br>               | Reporter                                             | Developer                                 | Maintainer                                          |
+| ---------------------------------------- | ----------------------- | ---------------------------------------------------- | ----------------------------------------- | --------------------------------------------------- |
+| **Commit**                               | No                      | No                                                   | Sí                                        | Sí                                                  |
+| **Ejecutar pipeline manualmente**        | No                      | No                                                   | Sí                                        | Sí                                                  |
+| **Push y Pull del repositorio**          | No<br>(ni push ni pull) | Pull: Sí  <br>Push: No                               | Pull: Sí  <br>Push: Sí                    | Pull: Sí  <br>Push: Sí                              |
+| **Crear Merge Request**                  | No                      | Sí  <br>(puede crear MRs, aunque no mergear cambios) | Sí  <br>(puede crear y participar en MRs) | Sí  <br>(puede crear y además fusionar/mergear)     |
+| **Acceder a la administración del repo** | No                      | No                                                   | No                                        | Sí  <br>(gestionar settings, miembros, CI/CD, etc.) |
 
-          Los jobs son las tareas concretas que se ejecutan dentro de cada stage.
-        
-        - ¿Qué es un stage?
-        
-          Es un nivel o fase dentro del pipeline que agrupa jobs relacionados entre sí y permite que estos se ejecuten en un orden específico.
 
-- Editores
-    - PipeLine Editor
 
-      El Pipeline Editor de GitLab es una herramienta visual basada en la web que facilita la creación y gestión de pipelines de integración y entrega continua (CI/CD). Permite a los usuarios diseñar y configurar pipelines de manera intuitiva, sin tener que escribir manualmente los archivos de configuración en YAML. Con este editor, es posible definir las etapas, trabajos y otros aspectos de los pipelines de forma visual, validando la configuración en tiempo real para evitar errores.
-    - Web IDE
 
-      El Web IDE de GitLab es una herramienta de desarrollo totalmente basada en la web que permite a los usuarios escribir, modificar y gestionar su código directamente en GitLab, sin la necesidad de contar con un editor de código o IDE instalado en su equipo.
 
-[Referencia configuración de pipeline](http://gitlab.local:8888/help/ci/yaml/index)
-- Estructura básica de un pipeline
-    - default
-    - image
-    - stage
-    - script
-    - before_script
-    - after_script
-    
-- Variables de grupo, proyecto y pipeline
-    - [Variables Predefinidas](https://docs.gitlab.com/ee/ci/variables/predefined_variables.html)
-    - Usando variables
-    - Orden de precedencia
-    - Casos de uso
 
-- Control sobre los pipelines
-    - Workflows
-    - Rules
-    - Allow failure
-    - Needs
-
-- Artifacts
-
-- Cache
-
-- Environments
-    - ¿Qué es un environment?
-    - ¿Para que lo usamos?
-    - Redeploy
-    - Rollback
-
-- Services
-
-5. Uso de container registry y dependency proxy
-
-    - ¿Qué es el container registry?, ¿y cómo se usa?
-    - ¿Qué es el dependency proxy?, ¿y cómo se usa?
-
-6. Creacion de pipelines de build,test, deploy y release
-    - App python con flask
-    - App springboot
-
-7. Downstream pipelines
-    - Multi-project pipelines
-    - Parent-child pipelines
-
-8. Gitlab Pages
-
-9. Optimizando pipelines con Templates
-    - Anchors
-    - Extends
-    - Reference Tags
-    - includes
-
-## Información usada en la Clase
-
-- User: **root**, Pass: **Gitl@bPass** , Access Level: **Admin** (Usuario ya creado)
-
-- User: **developer1**, Pass: **dev€loper1** , Access Level: **Regular**
-
-- User: **developer2**, Pass: **dev€loper2** , Access Level: **Regular**
